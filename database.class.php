@@ -58,12 +58,12 @@ class Database {
     
     public function resultset(){
         $this->execute();
-        return $this->stmt->fetchAll(PDO::FETCH_ASSOC);
+        return $this->stmt->fetchAll(PDO::FETCH_BOTH);
     }
     
     public function single(){
         $this->execute();
-        return $this->stmt->fetch(PDO::FETCH_ASSOC);
+        return $this->stmt->fetch(PDO::FETCH_BOTH);
     }
     
     public function rowCount(){
