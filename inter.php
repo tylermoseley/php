@@ -10,35 +10,18 @@ define("DB_NAME", "allpds3data");
 
 $database = new database();
 
-//BEGIN TRANSACTION
-$database->beginTransaction();
-
 //SELECT STATEMENT WITH PLACEHOLDERS
 $database->query('
-SELECT CONCAT(C_CODE,DONOR_NO) AS DONOR_NO,
-MIN(TET_DATE),
-UNIT_NO
-FROM TETANUS
-WHERE UNIT_NO = "*******"
-GROUP BY CONCAT(C_CODE,DONOR_NO)
+
 ');
 
 //EXECUTE STATEMENT AND SAVE TO MULTI_DIMENSIONAL ARRAY
-$init_shot = $database->resultset();
+$rows = $database->resultset();
 
-//SELECT STATEMENT WITH PLACEHOLDERS
-$database->query('
-SELECT CONCAT(C_CODE,DONOR_NO) AS DONOR_NO,
-MIN(TET_DATE),
-UNIT_NO
-FROM TETANUS
-WHERE UNIT_NO != "*******"
-GROUP BY CONCAT(C_CODE,DONOR_NO)
-');
 
-//EXECUTE STATEMENT AND SAVE TO MULTI_DIMENSIONAL ARRAY
-$init_unit = $database->resultset();
 
+//OPEN .ASC FILE IF NOT EXISTS, OVERWRITE IF EXISTS  
+$inter_asc = fopen('ePro/donor_program.asc','w');
 
 //ECHO RESULTS TO SCREEN
 echo "<pre>";
@@ -47,5 +30,9 @@ echo "</pre>";
 
 //ECHO ROW COUNT TO SCREEN
 echo $database->rowCount();
+
+
+//CLOSE .ASC FILE
+fclose($inter_asc);
 
 ?>

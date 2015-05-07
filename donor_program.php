@@ -37,7 +37,7 @@ WHERE UNIT_NO != "*******"
 GROUP BY CONCAT(CCODNDDR.NDDR_CODE,DONOR_NO)
 ');
 //EXECUTE STATEMENT AND SAVE TO MULTI_DIMENSIONAL ARRAY
-$init_unit = $database->resultset();
+$init_unit = $database->resultset_assoc();
 
 
 //OPEN .ASC FILE IF NOT EXISTS, OVERWRITE IF EXISTS  
@@ -45,7 +45,6 @@ $donor_program_asc = fopen('ePro/donor_program.asc','w');
 
 //DO WORK
 foreach ($init_donor_shot as $donor) {
-    //ADD NDDR CONVERSION
     $line_string = $donor["DONOR_NO"] . "|004|1|1|1|||||||";
     if ($donor['UNIT_NO'] == "*******") {
         $line_string .= $donor['TET_DATE'] . "|||";

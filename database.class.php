@@ -17,20 +17,32 @@ class Database {
         //Set Options
         $options = array(
             PDO::ATTR_PERSISTENT => true,
-            PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION
+            PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+            PDO::MYSQL_ATTR_USE_BUFFERED_QUERY => false
         );
-        //Attempt connection instance
+        //ATTEMPT CREATING CREATING CONNECTION OBJECT
         try {
             $this->dbh = new PDO($dsn, $this->user, $this->pass, $options);
         }
-        //Catch Errors
+        //CATCH AND ECHO ERRORS
         catch (PDOException $e){
             $this->error = $e->getMessage();
+            echo $this->error;
         }
+        //$this->dbh->setAttribute(PDO::MYSQL_ATTR_USE_BUFFERED_QUERY, false);
     }
     
     public function query($query){
-        $this->stmt = $this->dbh->prepare($query);
+        //ATTEMPT TO PREPARE QUERY
+        try {
+            $this->stmt = $this->dbh->prepare($query);
+        }
+        //CATCH AND ECHO ERRORS
+        catch (PDOException $e){
+            $this->error = $e->getMessage();
+            echo $this->error;
+        }
+        
     }
     
     public function bind($param, $value, $type = null){
@@ -56,9 +68,36 @@ class Database {
         return $this->stmt->execute();
     }
     
-    public function resultset(){
+    public function resultset_assoc(){
+        //ATTEMPT TO FETCHALL TO ASSOCIATIVE ARRAY
+        try {
+            $this->execute();
+            return $this->stmt->fetchAll(PDO::FETCH_ASSOC);
+        }
+        //CATCH AND ECHO ERRORS
+        catch (PDOException $e){
+            $this->error = $e->getMessage();
+            echo $this->error;
+        }
+        
+    }
+    
+    public function resultset_num(){
         $this->execute();
-        return $this->stmt->fetchAll(PDO::FETCH_BOTH);
+        return $this->stmt->fetchAll(PDO::FETCH_NUM);
+    }
+    
+    public function resultset_both(){
+        //ATTEMPT TO FETCHALL TO ARRAY WITH BOTH ASSOC AND NUM
+        try {
+            $this->execute();
+            return $this->stmt->fetchAll(PDO::FETCH_BOTH);
+        }
+        //CATCH AND ECHO ERRORS
+        catch (PDOException $e){
+            $this->error = $e->getMessage();
+            echo $this->error;
+        }
     }
     
     public function single(){
