@@ -37,7 +37,7 @@ $reg_donors = $database->resultset_both();
 
 
 //OPEN .ASC FILE IF NOT EXISTS, OVERWRITE IF EXISTS  
-$donneur_asc = fopen('donneur.asc','w');
+$donneur_asc = fopen('ePro/donneur.asc','w');
 
 //DO WORK
 foreach ($reg_donors as $donor) {
