@@ -1,21 +1,13 @@
 <?php
-//Timestamp for script run time
+//START TIME
 date_default_timezone_set('America/New_York');
-echo "Began at: ". date('m/d/Y h:i:sa') ."\n";
+echo "Began at: ". date('m/d/Y h:i:sa') ."<\n>";
+flush();
 $starttime = microtime(true);
 
-//DB Connection variables
-$db_host = 'localhost';
-$db_uname = 'root';
-$db_passwd = 'plaut0mati0n';
-$db = 'allpds3data';
-$link = mysqli_connect($db_host, $db_uname, $db_passwd, $db)
-    or die ("Could not connect to database, error: " . mysqli_error($link));
-    
- 
-$ccodes = "('AB','AU','AY','BG','BY','CD','CS','DF','DU','FD','FS','GA','GL','GN','HS','JB','JK','JV','LB','LC','LR','LU','NG','OL','PH','PL','SA','SS','ST','TA','TT','WF','WN')";    
+include 'database.class.php';
 
-// Connection Configuration
+//CONNECTION VARIABLES
 $ip = getHostByName(getHostName());
 if ($ip == '10.2.1.102') {
     define("DB_HOST", "localhost");
@@ -28,103 +20,70 @@ if ($ip == '10.2.1.102') {
 }
 define("DB_NAME", "allpds3data");
 
+//NEW CONNECTION OBJECT
+$database = new database();
 
-$ccode_nddr = array(
-	'AU' => '0885',
-	'NG' => '0824',
-	'AB' => '0454',
-	'BG' => '0469',
-	'BY' => '0904',
-	'CD' => '0644',
-	'DU' => '0455',
-	'DF' => '0447',
-	'FD' => '0646',
-	'FS' => '0730',
-	'GN' => '0775',
-	'GA' => '0453',
-	'GL' => '0837',
-	'HS' => '0759',
-	'JK' => '0777',
-	'JV' => '0207',
-	'JB' => '0835',
-	'LC' => '0459',
-	'PL' => '0449',
-	'LR' => '0761',
-	'LU' => '0739',
-	'LB' => '0948',	
-	'OL' => '0815',
-	'PH' => '0108',	
-	'SA' => '0982',
-	'SS' => '0876',	
-	'ST' => '0458',
-	'TT' => '0635',
-	'TA' => '0446',
-	'CS' => '0448',
-	'WF' => '0810',
-	'WN' => '0639',
-	'AY' => '0456',
-);
-    
-$file = fopen("ePro/donneur.asc", 'w');    
-//$headers = "NO_DONN|NOM_DONN|SDX_NOM_DONN|SFX_NOM_DONN|PRE_DONN|SEX_DONN|DTN_DONN|CPN_DONN|DPT_NAI|NOM_JF|SDX_NOM_JF|MIDDLE_NAME|NICKNAME|MOTHER_NAME|CORR_NAME|NO_SS|CAN_ID_NO|NO_CI|ADR_DONN1|SAD_DONN1|CP_DONN1|VILL_DONN1|SSA_DONN1|TEL_DONN1|COD_COUNTY1|PER_VAL1|ADR_DONN2|SAD_DONN2|CP_DONN2|VILL_DONN2|SSA_DONN2|TEL_DONN2|COD_COUNTY2|PER_VAL2|ENT_DONN|NB_DON_ANT|DATE_FIRST|LIEU_COL1|LIEU_COL2|LIEU_COL3|LIEU_COL4|COD_ASSO|TYP_PREL|CONVO|TPP|POIDS|TAILLE|COD_DIPL|TITRE_DONN|TEL_COMP|TEL_DIRECT|OCCUPATION|MBS|COD_ARCON|LANGUE_DONN|ETHNIE|TYP_POCH_USUEL|COD_CONVO1|COD_CONVO2|COD_CONVO3|FREQ_DES|COD_MED|TYP_DONN|PTP|PRE_DON|EDI_CARTE|JRS_NON|PER_NON1|PER_NON2|PER_NON3|TEL_MOBILE|EMAIL|DT_ENTRY|DEBIT_CARD_PACKAGE_ID|REC_ID\n";
-//echo fputs($file,$headers);
-$sql = "
-    	SELECT C_CODE,
-	DONOR_NO,
-	LAST,
-	FIRST,
-	SEX,
-	BIRTH_DATE,
-	MIDDLE,
-	SSNO,
-	STREET1,
-	STREET2,
-	ZIP1,
-	CITY,
-	PHONE,
-	STATE,
-	EMAIL_ADDR,
-	ENTRY_DATE
-    	FROM allpds3data.`REGDONR`
-    	WHERE 1
-";    
+//SELECT STATEMENT
+$database->query('
+SELECT CONCAT(CCODNDDR.NDDR_CODE,DONOR_NO) AS DONOR_NO,
+LAST,
+FIRST,
+SEX,
+IF(DATE_FORMAT(BIRTH_DATE,"%d%m%Y")="00000000","",DATE_FORMAT(BIRTH_DATE,"%d%m%Y")) AS BIRTH_DATE,
+MIDDLE,
+SSNO,
+STREET1,
+STREET2,
+ZIP1,
+CITY,
+PHONE,
+STATE,
+EMAIL_ADDR,
+IF(DATE_FORMAT(ENTRY_DATE,"%d%m%Y")="00000000","",DATE_FORMAT(ENTRY_DATE,"%d%m%Y")) AS ENTRY_DATE
+FROM allpds3data.REGDONR
+JOIN allpds3data.CCODNDDR
+ON REGDONR.C_CODE=CCODNDDR.C_CODE
+WHERE 1
+');
 
-$result = mysqli_query($link,$sql)
-    or die ("Error in sql");
+//EXECUTE STATEMENT AND SAVE TO MULTI_DIMENSIONAL ARRAY
+$reg_donors = $database->resultset_assoc();
 
-$tot_count = mysqli_num_rows($result);
-$count = 0;
-    
-while ($row = mysqli_fetch_array($result, MYSQLI_ASSOC)) {
-	$count++;
-	$NO_DONN = $ccode_nddr[$row["C_CODE"]] . $row["DONOR_NO"];
-	$SDX_NOM_DONN = soundex($row["LAST"]);
-	if ($row["BIRTH_DATE"] == "0000-00-00") {
-		$DTN_DONN = "";
-} else {
-		$bdate = date_create($row["BIRTH_DATE"]);
-		$DTN_DONN = date_format($bdate, 'dmY');
-	}
-	if ($row["ENTRY_DATE"] == "0000-00-00") {
-		$DT_ENTRY = "";
-	} else {
-		$edate = date_create($row["ENTRY_DATE"]);
-		$DT_ENTRY = date_format($edate, 'dmY');
-    	}
-	
-	$string = "$NO_DONN|{$row["LAST"]}|$SDX_NOM_DONN||{$row["FIRST"]}|{$row["SEX"]}|$DTN_DONN|||||{$row["MIDDLE"]}||||{$row["SSNO"]}|||{$row["STREET1"]}|{$row["STREET2"]}|{$row["ZIP1"]}|{$row["CITY"]}||{$row["PHONE"]}|{$row["STATE"]}|||||||||||||||||||||||||||||||||||||||||||||||{$row["EMAIL_ADDR"]}|$DT_ENTRY|||\n";
-    	
-	fputs($file,$string);
-    	
-	echo round($count / $tot_count * 100) . "%\r";
+//OPEN .ASC FILE IF NOT EXISTS, OVERWRITE IF EXISTS  
+$donneur_asc = fopen('ePro/donneur.asc','w');
+
+//DO WORK
+foreach ($reg_donors as $donor) {
+    $line_string =
+        $donor["DONOR_NO"] . "|" .
+        $donor["LAST"] . "|" .
+        soundex($donor["LAST"]) . "||" .
+        $donor["FIRST"] . "|" .
+        $donor["SEX"] . "|" .
+        $donor["BIRTH_DATE"] . "|||||" .
+        $donor["MIDDLE"] . "||||" .
+        $donor["SSNO"] . "|||" .
+        $donor["STREET1"] . "|" .
+        $donor["STREET2"] . "|" .
+        $donor["ZIP1"] . "|" .
+        $donor["CITY"] . "||" .
+        $donor["PHONE"] . "|" .
+        $donor["STATE"] . "||||||||||||||||||" .
+        "PHLEB_CODE" . "|||||||||||||||||||||||||||||" .
+        $donor["EMAIL_ADDR"] . "|" .
+        $donor["ENTRY_DATE"] . "||"
+        ;
+    $line_string .= "\n";
+    fputs($donneur_asc,$line_string);
 }
 
-fclose($file);
-    
-//timestamp for end of script and elapsed execution time calculation.
+//CLOSE .ASC FILE
+fclose($donneur_asc);
+
+//END TIME
 date_default_timezone_set('America/New_York');
 $endtime = microtime(true);
 $elapsedtime = $endtime - $starttime;
-echo "Completed at: " . date('m/d/Y h:i:sa') . "\n";
+echo "Completed at: " . date('m/d/Y h:i:sa') . "<\n>";
 echo "Elapsed time: " . gmdate("H:i:s", $elapsedtime) . "\n";
 ?>

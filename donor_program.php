@@ -1,8 +1,13 @@
 <?php
+//START TIME
+date_default_timezone_set('America/New_York');
+echo "Began at: ". date('m/d/Y h:i:sa') ."<\n>";
+flush();
+$starttime = microtime(true);
 
 include 'database.class.php';
 
-// Connection Configuration
+//CONNECTION VARIABLES
 $ip = getHostByName(getHostName());
 if ($ip == '10.2.1.102') {
     define("DB_HOST", "localhost");
@@ -17,7 +22,7 @@ define("DB_NAME", "allpds3data");
 
 $database = new database();
 
-//SELECT STATEMENT WITH PLACEHOLDERS
+//SELECT STATEMENT
 $database->query('
 SELECT CONCAT(CCODNDDR.NDDR_CODE,DONOR_NO) AS DONOR_NO,
 DATE_FORMAT(MIN(TET_DATE),"%d%m%Y") AS TET_DATE,
@@ -29,7 +34,7 @@ WHERE 1
 GROUP BY CONCAT(CCODNDDR.NDDR_CODE,DONOR_NO)
 ');
 //EXECUTE STATEMENT AND SAVE TO MULTI_DIMENSIONAL ARRAY
-$init_donor_shot = $database->resultset_assoc();
+$init_donor_shot = $database->resultset();
 
 
 //SELECT STATEMENT WITH PLACEHOLDERS
@@ -70,4 +75,10 @@ foreach ($init_donor_shot as $donor) {
 //CLOSE .ASC FILE
 fclose($donor_program_asc);
 
+//END TIME
+date_default_timezone_set('America/New_York');
+$endtime = microtime(true);
+$elapsedtime = $endtime - $starttime;
+echo "Completed at: " . date('m/d/Y h:i:sa') . "<\n>";
+echo "Elapsed time: " . gmdate("H:i:s", $elapsedtime) . "\n";
 ?>

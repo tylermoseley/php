@@ -1,8 +1,13 @@
 <?php
+//START TIME
+date_default_timezone_set('America/New_York');
+echo "Began at: ". date('m/d/Y h:i:sa') ."<\n>";
+flush();
+$starttime = microtime(true);
 
 include 'database.class.php';
 
-// Connection Configuration
+//CONNECTION VARIABLES
 $ip = getHostByName(getHostName());
 if ($ip == '10.2.1.102') {
     define("DB_HOST", "localhost");
@@ -17,7 +22,7 @@ define("DB_NAME", "allpds3data");
 
 $database = new database();
 
-//SELECT STATEMENT WITH PLACEHOLDERS
+//SELECT STATEMENT
 $database->query('
 
 ');
@@ -42,4 +47,10 @@ echo $database->rowCount();
 //CLOSE .ASC FILE
 fclose($inter_asc);
 
+//END TIME
+date_default_timezone_set('America/New_York');
+$endtime = microtime(true);
+$elapsedtime = $endtime - $starttime;
+echo "Completed at: " . date('m/d/Y h:i:sa') . "<\n>";
+echo "Elapsed time: " . gmdate("H:i:s", $elapsedtime) . "\n";
 ?>
