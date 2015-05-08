@@ -3,9 +3,16 @@
 include 'database.class.php';
 
 // Connection Configuration
-define("DB_HOST", "10.2.1.102");
-define("DB_USER", "remote");
-define("DB_PASS", "t1a2p3");
+$ip = getHostByName(getHostName());
+if ($ip == '10.2.1.102') {
+    define("DB_HOST", "localhost");
+    define("DB_USER", "root");
+    define("DB_PASS", "plaut0mati0n");
+} else {
+    define("DB_HOST", "10.2.1.102");
+    define("DB_USER", "remote");
+    define("DB_PASS", "t1a2p3");
+}
 define("DB_NAME", "allpds3data");
 
 $database = new database();
@@ -22,7 +29,7 @@ WHERE 1
 GROUP BY CONCAT(CCODNDDR.NDDR_CODE,DONOR_NO)
 ');
 //EXECUTE STATEMENT AND SAVE TO MULTI_DIMENSIONAL ARRAY
-$init_donor_shot = $database->resultset();
+$init_donor_shot = $database->resultset_assoc();
 
 
 //SELECT STATEMENT WITH PLACEHOLDERS

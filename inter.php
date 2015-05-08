@@ -3,9 +3,16 @@
 include 'database.class.php';
 
 // Connection Configuration
-define("DB_HOST", "localhost");
-define("DB_USER", "root");
-define("DB_PASS", "plaut0mati0n");
+$ip = getHostByName(getHostName());
+if ($ip == '10.2.1.102') {
+    define("DB_HOST", "localhost");
+    define("DB_USER", "root");
+    define("DB_PASS", "plaut0mati0n");
+} else {
+    define("DB_HOST", "10.2.1.102");
+    define("DB_USER", "remote");
+    define("DB_PASS", "t1a2p3");
+}
 define("DB_NAME", "allpds3data");
 
 $database = new database();
