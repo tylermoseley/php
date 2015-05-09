@@ -48,8 +48,6 @@ echo $database->lastInsertId();
 $database->endTransaction();
 
 //////////////////////////////////////////SELECT SINGLE/////////////////////////////////////////
-//BEGIN TRANSACTION
-$database->beginTransaction();
 //SELECT STATEMENT WITH PLACEHOLDER
 $database->query('SELECT FName, LName, Age, Gender FROM mytable WHERE FName = :fname');
 //BIND DATA TO PLACEHOLDER
@@ -76,4 +74,6 @@ print_r($rows);
 echo "</pre>";
 //ECHO ROW COUNT TO SCREEN
 echo $database->rowCount();
+//END TRANSACTION
+$database->endTransaction();
 ?>
