@@ -49,11 +49,25 @@ WHERE 1
 //EXECUTE STATEMENT AND SAVE TO MULTI_DIMENSIONAL ARRAY
 $reg_donors = $database->resultset_assoc();
 
+
+
 //OPEN .ASC FILE IF NOT EXISTS, OVERWRITE IF EXISTS  
 $donneur_asc = fopen('ePro/donneur.asc','w');
 
 //DO WORK
 foreach ($reg_donors as $donor) {
+
+//SELECT STATEMENT
+$database->query("
+    SELECT MIN(*)
+    FROM CP_VILL_DONN
+    WHERE ZIP = ':zip'
+    ");
+//BIND DATA TO PLACEHOLDERS
+$database->bind(':zip', '78704');
+//EXECUTE STATEMENT AND SAVE TO MULTI_DIMENSIONAL ARRAY
+$zip_city = $database->resultset_assoc();
+    
     $line_string =
         $donor["DONOR_NO"] . "|" .
         $donor["LAST"] . "|" .
@@ -65,8 +79,10 @@ foreach ($reg_donors as $donor) {
         $donor["SSNO"] . "|||" .
         $donor["STREET1"] . "|" .
         $donor["STREET2"] . "|" .
-        $donor["ZIP1"] . "|" .
-        $donor["CITY"] . "||" .
+        $zip_city["ZIP"] . "|" .
+        $zip_city["CITY"] . "||" .
+        //$donor["ZIP1"] . "|" .
+        //$donor["CITY"] . "||" .
         $donor["PHONE"] . "|" .
         $donor["STATE"] . "||||||||||||||||||" .
         "PHLEB_CODE" . "|||||||||||||||||||||||||||||" .
