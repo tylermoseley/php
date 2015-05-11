@@ -45,11 +45,17 @@ JOIN allpds3data.CCODNDDR
 ON REGDONR.C_CODE=CCODNDDR.C_CODE
 WHERE 1
 ');
-
 //EXECUTE STATEMENT AND SAVE TO MULTI_DIMENSIONAL ARRAY
 $reg_donors = $database->resultset_assoc();
 
-
+//SELECT STATEMENT
+$database->query("
+    SELECT *
+    FROM CP_VILL_DONN
+    WHERE 1
+    ");
+//EXECUTE STATEMENT AND SAVE TO MULTI_DIMENSIONAL ARRAY
+$zip_city = $database->resultset_assoc();
 
 //OPEN .ASC FILE IF NOT EXISTS, OVERWRITE IF EXISTS  
 $donneur_asc = fopen('ePro/donneur.asc','w');
@@ -57,16 +63,9 @@ $donneur_asc = fopen('ePro/donneur.asc','w');
 //DO WORK
 foreach ($reg_donors as $donor) {
 
-//SELECT STATEMENT
-$database->query("
-    SELECT MIN(*)
-    FROM CP_VILL_DONN
-    WHERE ZIP = ':zip'
-    ");
-//BIND DATA TO PLACEHOLDERS
-$database->bind(':zip', '78704');
-//EXECUTE STATEMENT AND SAVE TO MULTI_DIMENSIONAL ARRAY
-$zip_city = $database->resultset_assoc();
+    $zip_matches = array_keys($zip_city, $donor["ZIP1"]);
+    
+    print_r($zip_matches);
     
     $line_string =
         $donor["DONOR_NO"] . "|" .
