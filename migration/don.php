@@ -1,11 +1,9 @@
 <?php
 //START TIME
 date_default_timezone_set('America/New_York');
-echo "Began at: ". date('m/d/Y h:i:sa') ."<\n>";
+echo "Began at: ". date('m/d/Y h:i:sa') ."\n";
 flush();
 $starttime = microtime(true);
-
-include 'database.class.php';
 
 //CONNECTION VARIABLES
 $ip = getHostByName(getHostName());
@@ -20,65 +18,69 @@ if ($ip == '10.2.1.102') {
 }
 define("DB_NAME", "allpds3data");
 
-$database = new database();
+$link = mysqli_connect(DB_HOST, DB_USER, DB_PASS, DB_NAME)
+    or die ("Could not connect to database, error: " . mysqli_error($link));
+
 
 //SELECT STATEMENT
-$database->query('
-SELECT CONCAT(CCODNDDR.NDDR_CODE,DONOR_NO) AS DONOR_NO,
-DATE_FORMAT(MIN(TET_DATE),"%d%m%Y") AS TET_DATE,
-UNIT_NO
-FROM allpds3data.TETANUS
+$units_sql = '
+SELECT
+CONCAT (CCODNDDR.NDDR_CODE, UNIT_NO) AS UNIT_NO,
+CONCAT (CCODNDDR.NDDR_CODE, DONOR_NO) AS DONOR_NO,
+CCODNDDR.NDDR_CODE,
+TYP_PREL.E_P_TYP AS PHLEB_TYPE,
+GLOBAL_GMML.MLS,
+IF (DATE_FORMAT (DONOR_DATE, "%d%m%Y")="00000000","",DATE_FORMAT (DONOR_DATE, "%d%m%Y")) AS DON_DATE
+FROM allpds3data.UNIT
 JOIN allpds3data.CCODNDDR
-ON TETANUS.C_CODE=CCODNDDR.C_CODE
+ON UNIT.C_CODE=CCODNDDR.C_CODE
+LEFT JOIN allpds3data.TYP_PREL
+ON SUBSTR(UNIT.BOXING_KEY,7,2)=TYP_PREL.P_P_TYP
+LEFT JOIN allpds3data.GLOBAL_GMML
+ON UNIT.WT_BOTT=GLOBAL_GMML.GMS 
 WHERE 1
-GROUP BY CONCAT(CCODNDDR.NDDR_CODE,DONOR_NO)
-');
-//EXECUTE STATEMENT AND SAVE TO MULTI_DIMENSIONAL ARRAY
-$init_donor_shot = $database->resultset_assoc();
+ORDER BY UNIT.C_CODE, DONOR_DATE
+';
 
+//EXECUTE STATEMENT
+$units_query = mysqli_query($link,$units_sql)
+        or die ("Error in units_sql");
 
-//SELECT STATEMENT WITH PLACEHOLDERS
-$database->query('
-SELECT CONCAT(CCODNDDR.NDDR_CODE,DONOR_NO) AS DONOR_NO,
-DATE_FORMAT(MIN(TET_DATE),"%d%m%Y") AS TET_DATE,
-UNIT_NO
-FROM allpds3data.TETANUS
-JOIN allpds3data.CCODNDDR
-ON TETANUS.C_CODE=CCODNDDR.C_CODE
-WHERE UNIT_NO != "*******"
-GROUP BY CONCAT(CCODNDDR.NDDR_CODE,DONOR_NO)
-');
-//EXECUTE STATEMENT AND SAVE TO MULTI_DIMENSIONAL ARRAY
-$init_unit = $database->resultset_assoc();
+//OPEN ASCII FILE IF NOT EXISTS, OVERRIDE IF EXISTS  
+$don_asc = fopen('ePro/don.asc','w');
 
-
-//OPEN .ASC FILE IF NOT EXISTS, OVERWRITE IF EXISTS  
-$donor_program_asc = fopen('ePro/donor_program.asc','w');
+//QUERY TIME
+$endtime = microtime(true);
+$elapsedtime = $endtime - $starttime;
+echo "Query time: " . gmdate("H:i:s", $elapsedtime) . "\n";
 
 //DO WORK
-foreach ($init_donor_shot as $donor) {
-    $line_string = $donor["DONOR_NO"] . "|004|1|1|1|||||||";
-    if ($donor['UNIT_NO'] == "*******") {
-        $line_string .= $donor['TET_DATE'] . "|||";
-    } else {
-        $line_string .= "|||";
-    }
-    foreach ($init_unit as $first_unit) {
-        if ($first_unit["DONOR_NO"] == $donor["DONOR_NO"]) {
-            $line_string .= $first_unit['TET_DATE'] . "|||";
-        }
-    }
-    $line_string .= "\n";
-    fputs($donor_program_asc,$line_string);
+$count = 0;
+while ($don = mysqli_fetch_array($units_query, MYSQLI_ASSOC)) {
+	$line_string = 
+	$don["UNIT_NO"] . "|" .
+	$don["DONOR_NO"] . "|" .
+	$don["NDDR_CODE"] . "|" .
+	$don["DON_DATE"] . "|" .
+	$don["NDDR_CODE"] . "|||" . 
+	$don["PHLEB_TYPE"] . "|||||||||" . 
+	$don["MLS"] . "||||||" .
+	"||||"
+	;
+	$line_string .= "\n";
+	fputs ($don_asc,$line_string);
+	$count++;
+	echo $count . "\r";
 }
 
+
 //CLOSE .ASC FILE
-fclose($donor_program_asc);
+fclose($don_asc);
 
 //END TIME
 date_default_timezone_set('America/New_York');
 $endtime = microtime(true);
 $elapsedtime = $endtime - $starttime;
-echo "Completed at: " . date('m/d/Y h:i:sa') . "<\n>";
+echo "\n Completed at: " . date('m/d/Y h:i:sa') . "\n";
 echo "Elapsed time: " . gmdate("H:i:s", $elapsedtime) . "\n";
 ?>

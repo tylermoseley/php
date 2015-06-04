@@ -34,7 +34,7 @@ WHERE 1
 GROUP BY CONCAT(CCODNDDR.NDDR_CODE,DONOR_NO)
 ');
 //EXECUTE STATEMENT AND SAVE TO MULTI_DIMENSIONAL ARRAY
-$init_donor_shot = $database->resultset();
+$init_donor_shot = $database->resultset_assoc();
 
 
 //SELECT STATEMENT WITH PLACEHOLDERS

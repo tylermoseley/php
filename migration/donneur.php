@@ -1,7 +1,7 @@
 <?php
 //START TIME
 date_default_timezone_set('America/New_York');
-echo "Began at: ". date('m/d/Y h:i:sa') ."<\n>";
+echo "Began at: ". date('m/d/Y h:i:sa') ."\n";
 flush();
 $starttime = microtime(true);
 
@@ -55,17 +55,47 @@ $database->query("
     WHERE 1
     ");
 //EXECUTE STATEMENT AND SAVE TO MULTI_DIMENSIONAL ARRAY
-$zip_city = $database->resultset_assoc();
+$zip_list = $database->resultset_assoc();
+
+
 
 //OPEN .ASC FILE IF NOT EXISTS, OVERWRITE IF EXISTS  
 $donneur_asc = fopen('ePro/donneur.asc','w');
 
 //DO WORK
 foreach ($reg_donors as $donor) {
+	$matches = array();	
+	$count1 = 0;
+	foreach ($zip_list as $zip_city) {
+		if ($donor["ZIP1"] = "" AND $donor["CITY"] == "") {
+			$finalzip = "99999";
+			$finalcity = "blank";
+		} elseif ($donor["ZIP1"] == "" AND $donor["CITY"] != "") {
+			$finalzip = "99999";
+			$finalcity = $donor["CITY"];	
+		
+		}
+		//echo "|" . substr($zip_city["ZIP"],0,5) . "|" . $donor["ZIP1"] . "|\n";
+		if (substr($zip_city["ZIP"],0,5) == $donor["ZIP1"]) {
+			//echo $zip_city["ZIP"] . "|" . $zip_city["CITY"] . "|" . $donor["ZIP1"] . "|" . $donor["CITY"] . "|\n"; 
+			$matches[$count1]["ZIP"] = $zip_city["ZIP"];
+			$matches[$count1]["CITY"] = $zip_city["CITY"];
+			$count1++;
+		} else {
+		//do nothing
+		}
+	}	
+	//echo "......." . count($matches) . "\n";
+	if (count($matches) == 1) {
+		$finalzip = $matches[0]["ZIP"];
+		$finalcity = $matches[0]["CITY"]; 
+	} elseif (count($matches) == 0) {
+		
+	} else {
+		$finalzip = "undetermined";
+		$finalcity = "undetermined";
+	}
 
-    $zip_matches = array_keys($zip_city, $donor["ZIP1"]);
-    
-    print_r($zip_matches);
     
     $line_string =
         $donor["DONOR_NO"] . "|" .
@@ -78,8 +108,8 @@ foreach ($reg_donors as $donor) {
         $donor["SSNO"] . "|||" .
         $donor["STREET1"] . "|" .
         $donor["STREET2"] . "|" .
-        $zip_city["ZIP"] . "|" .
-        $zip_city["CITY"] . "||" .
+        $finalzip . "|" .
+        $finalcity . "||" .
         //$donor["ZIP1"] . "|" .
         //$donor["CITY"] . "||" .
         $donor["PHONE"] . "|" .

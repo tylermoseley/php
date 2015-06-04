@@ -18,7 +18,7 @@ class Database {
         $options = array(
             PDO::ATTR_PERSISTENT => true,
             PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-            PDO::MYSQL_ATTR_USE_BUFFERED_QUERY => false
+          //  PDO::MYSQL_ATTR_USE_BUFFERED_QUERY => false
         );
         //ATTEMPT CREATING CREATING CONNECTION OBJECT
         try {
@@ -127,6 +127,9 @@ class Database {
     
     public function debugDumpParams(){
         return $this->stmt->debugDumpParams();
+    }
+    public function closeCurs(){
+	$this->stmt->closeCursor();
     }
 }
 
